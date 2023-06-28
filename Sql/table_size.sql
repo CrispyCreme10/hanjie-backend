@@ -1,0 +1,10 @@
+SELECT
+  TABLE_NAME AS `Table`,
+  ROUND((DATA_LENGTH + INDEX_LENGTH)) AS `Size (B)`
+FROM
+  information_schema.TABLES
+WHERE
+  TABLE_SCHEMA = "hanjie"
+ORDER BY
+  (DATA_LENGTH + INDEX_LENGTH)
+DESC;

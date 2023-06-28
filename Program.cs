@@ -1,10 +1,26 @@
 using Microsoft.EntityFrameworkCore;
+using Hanjie.Operations;
+using Hanjie.Contexts;
+using Hanjie.Models;
+using Hanjie.Repositories;
+using Hanjie.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<BoardDb>(opt => opt.UseInMemoryDatabase("Boards"));
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+var services = builder.Services;
+
+// init services
+services.AddCors();
+services.AddEndpointsApiExplorer();
+services.AddSwaggerGen();
+services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+// configure db
+services.Configure<DbSettings>(builder.Configuration.GetSection("DbSettings"));
+
+// custom services
+services.AddSingleton<DataContext>();
+services.AddScoped<IHanjieRepository, HanjieRepository>();
+services.AddScoped<IHanjieService, HanjieService>();
 
 var app = builder.Build();
 
@@ -17,18 +33,22 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/board/{id}", async (string id, BoardDb db) => 
-    await db.Boards.FindAsync(id)
-        is Board board
-            ? Results.Ok(board)
-            : Results.NotFound());
+app.MapGet("/board/{id}", async (string id, IHanjieService hanjiService) => 
+    await hanjiService.GetBoard(id) 
+        is Board board 
+        ? Results.Ok(board)
+        : Results.NotFound()
+);
 
-app.MapPost("/board", async (Board board, BoardDb db) => 
+app.MapPost("/board", async (BoardCreationOptions opts, IHanjieService hanjiService) => 
 {
-    db.Boards.Add(board);
-    await db.SaveChangesAsync();
+    // create board
+    Board newBoard = BoardFactory.CreateRandomBoard(opts);
 
-    return Results.Created($"/board/{board.Id}", new { Board = "" });
+    // try save board in db
+    // await hanjiService.TrySaveBoard(newBoard);
+
+    return Results.Created($"/board/{newBoard.Id}", new { Board = newBoard });
 })
 .WithName("CreateBoard")
 .WithOpenApi();

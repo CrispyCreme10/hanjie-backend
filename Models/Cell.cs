@@ -1,3 +1,5 @@
+namespace Hanjie.Models;
+
 public class Cell
 {
     public string? BoardId { get; set; }
