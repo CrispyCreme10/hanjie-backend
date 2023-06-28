@@ -1,3 +1,4 @@
+USE hanjie;
 CREATE TABLE board_cell (
     board_id NVARCHAR(255) NOT NULL,
     row_no TINYINT NOT NULL,
