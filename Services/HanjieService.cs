@@ -6,7 +6,7 @@ namespace Hanjie.Services;
 
 public interface IHanjieService
 {
-    Task<Board> GetBoard(string id);
+    Task<PostgresBoard> GetBoard(string id);
     Task<bool> TrySaveBoard(Board board);
 }
 
@@ -21,13 +21,9 @@ public class HanjieService : IHanjieService
         _mapper = mapper;
     }
 
-    public async Task<Board> GetBoard(string id)
+    public async Task<PostgresBoard> GetBoard(string id)
     {
-        return new Board
-        {
-            Id = id,
-            Cells = (await _hanjieRepository.GetBoardCells(id)).ToList()
-        };
+        return await _hanjieRepository.GetBoard(id);
     }
 
     public async Task<bool> BoardExists(string id)

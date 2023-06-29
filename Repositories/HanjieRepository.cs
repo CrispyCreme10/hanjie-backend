@@ -10,7 +10,7 @@ public interface IHanjieRepository
     Task<IEnumerable<Cell>> GetBoardCells(string boardId);
     Task CreateCell(Cell cell);
     Task<bool> BoardExists(string boardId);
-    Task<IEnumerable<PostgresBoard>> GetBoard(string boardId);
+    Task<PostgresBoard> GetBoard(string boardId);
 }
 
 public class HanjieRepository : IHanjieRepository
@@ -56,7 +56,7 @@ public class HanjieRepository : IHanjieRepository
         return test.HasValue && test.Value;
     }
 
-    public Task<IEnumerable<PostgresBoard>> GetBoard(string boardId)
+    public Task<PostgresBoard> GetBoard(string boardId)
     {
         throw new NotImplementedException();
     }
@@ -86,7 +86,7 @@ public class HanjiePostgresRepository : IHanjieRepository
         throw new NotImplementedException();
     }
 
-    public async Task<IEnumerable<PostgresBoard>> GetBoard(string boardId)
+    public async Task<PostgresBoard> GetBoard(string boardId)
     {
         using var conn = _context.CreateConnection();
         var query = """
@@ -94,7 +94,7 @@ public class HanjiePostgresRepository : IHanjieRepository
             FROM board
             WHERE board_id = @boardId
         """;
-        var test = await conn.QueryAsync<PostgresBoard>(query, new { boardId });
+        var test = await conn.QuerySingleOrDefaultAsync<PostgresBoard>(query, new { boardId });
         return test;
     }
 }

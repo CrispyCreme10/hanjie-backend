@@ -38,6 +38,7 @@ public class PostgreSqlDataContext : IDataContext
     public IDbConnection CreateConnection()
     {
         var connectionString = $"Host={_dbSettings.Server};Database={_dbSettings.Database};Username={_dbSettings.User};Password={_dbSettings.Password}";
+        System.Console.WriteLine(connectionString);
         return new NpgsqlConnection(connectionString);
     }
 }

@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Hanjie.Operations;
 using Hanjie.Contexts;
 using Hanjie.Models;
@@ -16,10 +15,10 @@ services.AddSwaggerGen();
 services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 // configure db
-services.Configure<DbSettings>(builder.Configuration.GetSection("DbSettings"));
+services.Configure<DbSettings>(builder.Configuration.GetSection("PostgresDbSettings"));
 
 // custom services
-services.AddSingleton<PostgreSqlDataContext>();
+services.AddScoped<IDataContext, PostgreSqlDataContext>();
 services.AddScoped<IHanjieRepository, HanjiePostgresRepository>();
 services.AddScoped<IHanjieService, HanjieService>();
 
@@ -39,7 +38,7 @@ app.UseHttpsRedirection();
 
 app.MapGet("/board/{id}", async (string id, IHanjieService hanjiService) => 
     await hanjiService.GetBoard(id) 
-        is Board board 
+        is PostgresBoard board 
         ? Results.Ok(board)
         : Results.NotFound()
 );
