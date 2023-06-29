@@ -4,12 +4,24 @@ using Hanjie.Models;
 using Hanjie.Repositories;
 using Hanjie.Services;
 using Dapper;
+using Newtonsoft.Json;
 
+// builder
 var builder = WebApplication.CreateBuilder(args);
+
 var services = builder.Services;
 
 // init services
-services.AddCors();
+var policyName = "MyAllowSpecificOrigins";
+services.AddCors(opts => {
+    opts.AddPolicy(name: policyName,
+        policy => {
+            policy.WithOrigins("http://localhost:4200")
+                .AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
 services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
 services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -18,6 +30,8 @@ services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 services.Configure<DbSettings>(builder.Configuration.GetSection("PostgresDbSettings"));
 
 // custom services
+services.AddControllers()
+    .AddNewtonsoftJson();
 services.AddScoped<IDataContext, PostgreSqlDataContext>();
 services.AddScoped<IHanjieRepository, HanjiePostgresRepository>();
 services.AddScoped<IHanjieService, HanjieService>();
@@ -35,25 +49,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors(policyName);
 
-app.MapGet("/board/{id}", async (string id, IHanjieService hanjiService) => 
-    await hanjiService.GetBoard(id) 
-        is PostgresBoard board 
-        ? Results.Ok(board)
-        : Results.NotFound()
-);
-
-app.MapPost("/board", async (BoardCreationOptions opts, IHanjieService hanjiService) => 
-{
-    // create board
-    Board newBoard = BoardFactory.CreateRandomBoard(opts);
-
-    // try save board in db
-    // await hanjiService.TrySaveBoard(newBoard);
-
-    return Results.Created($"/board/{newBoard.Id}", new { Board = newBoard });
-})
-.WithName("CreateBoard")
-.WithOpenApi();
+app.MapControllers();
 
 app.Run();

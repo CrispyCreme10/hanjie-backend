@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-using Hanjie.Contexts;
 using Hanjie.Models;
 
 namespace Hanjie.Operations;
@@ -33,9 +32,39 @@ public static class BoardFactory
         return board;
     }
 
+    public static PostgresBoard CreateRandomPostgresBoard(BoardCreationOptions opts)
+    {
+        PostgresBoard board = new PostgresBoard
+        {
+            Cells = new int[opts.Rows, opts.Cols]
+        };
+        Random rnd = new Random();
+
+        float hitPercent = opts.HitsPercentage;
+        if (opts.Hits > 0) hitPercent = (float)opts.Hits / (opts.Rows * opts.Cols);
+        if (hitPercent == 0) return board;
+
+        for (int rowNo = 0; rowNo < opts.Rows; rowNo++)
+        {
+            for (int colNo = 0; colNo < opts.Cols; colNo++)
+            {
+                board.Cells[rowNo, colNo] = rnd.NextDouble() < hitPercent ? 1 : -1;
+            }
+        }
+
+        board.BoardId = CreatePostgresBoardHash(board);
+        return board;
+    }
+
     public static string CreateBoardHash(Board board)
     {
         string flatBoard = string.Join("", board.Cells.OrderBy(c => c.Row).ThenBy(c => c.Col).Select(c => c.Value));
+        return GetHashString(flatBoard);
+    }
+
+    public static string CreatePostgresBoardHash(PostgresBoard board)
+    {
+        string flatBoard = string.Join("", from int cellVal in board.Cells select cellVal);
         return GetHashString(flatBoard);
     }
 

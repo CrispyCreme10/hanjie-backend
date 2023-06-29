@@ -1,5 +1,6 @@
 using AutoMapper;
 using Hanjie.Models;
+using Hanjie.Operations;
 using Hanjie.Repositories;
 
 namespace Hanjie.Services;
@@ -7,7 +8,9 @@ namespace Hanjie.Services;
 public interface IHanjieService
 {
     Task<PostgresBoard> GetBoard(string id);
-    Task<bool> TrySaveBoard(Board board);
+    Task<PostgresBoard> CreateBoard(BoardCreationOptions opts);
+    Task<bool> CheckValue(string boardId, int row, int col, int val);
+    Task<bool> TrySaveBoard(PostgresBoard board);
 }
 
 public class HanjieService : IHanjieService
@@ -26,21 +29,27 @@ public class HanjieService : IHanjieService
         return await _hanjieRepository.GetBoard(id);
     }
 
+    public async Task<bool> CheckValue(string boardId, int row, int col, int val)
+    {
+        return await _hanjieRepository.CheckValue(boardId, row, col, val);
+    }
+
+    public async Task<PostgresBoard> CreateBoard(BoardCreationOptions opts)
+    {
+        PostgresBoard board = BoardFactory.CreateRandomPostgresBoard(opts);
+        await _hanjieRepository.CreateBoard(board);
+        return board;
+    }
+
     public async Task<bool> BoardExists(string id)
     {
         return await _hanjieRepository.BoardExists(id);
     }
 
-    public async Task<bool> TrySaveBoard(Board board)
+    public async Task<bool> TrySaveBoard(PostgresBoard board)
     {
-        if (await BoardExists(board.Id)) return false;
-
-        foreach(Cell cell in board.Cells)
-        {
-            if (string.IsNullOrEmpty(cell.BoardId)) cell.BoardId = board.Id;
-            await _hanjieRepository.CreateCell(cell);
-        }
-
+        if (await BoardExists(board.BoardId)) return false;
+        await _hanjieRepository.CreateBoard(board);
         return true;
     }
 }

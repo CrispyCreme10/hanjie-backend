@@ -15,7 +15,7 @@ public class BoardCreationOptions
     [Range(MIN_ROW_COL, MAX_ROW_COL)]
     public int Cols { get; set; }
 
-    [Range(1, MAX_HITS)]
+    [Range(0, MAX_HITS)]
     public int Hits { get; set; }
 
     [Range(0f, 1f)]
