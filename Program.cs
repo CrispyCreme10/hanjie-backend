@@ -4,6 +4,7 @@ using Hanjie.Contexts;
 using Hanjie.Models;
 using Hanjie.Repositories;
 using Hanjie.Services;
+using Dapper;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -18,9 +19,12 @@ services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 services.Configure<DbSettings>(builder.Configuration.GetSection("DbSettings"));
 
 // custom services
-services.AddSingleton<DataContext>();
-services.AddScoped<IHanjieRepository, HanjieRepository>();
+services.AddSingleton<PostgreSqlDataContext>();
+services.AddScoped<IHanjieRepository, HanjiePostgresRepository>();
 services.AddScoped<IHanjieService, HanjieService>();
+
+// custom other
+SqlMapper.AddTypeHandler(new GenericMultiArrayHandler<int>());
 
 var app = builder.Build();
 

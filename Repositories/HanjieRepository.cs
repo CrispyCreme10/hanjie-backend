@@ -1,3 +1,4 @@
+using System.Data;
 using Dapper;
 using Hanjie.Contexts;
 using Hanjie.Models;
@@ -9,13 +10,14 @@ public interface IHanjieRepository
     Task<IEnumerable<Cell>> GetBoardCells(string boardId);
     Task CreateCell(Cell cell);
     Task<bool> BoardExists(string boardId);
+    Task<IEnumerable<PostgresBoard>> GetBoard(string boardId);
 }
 
 public class HanjieRepository : IHanjieRepository
 {
-    private DataContext _context;
+    private MySqlDataContext _context;
 
-    public HanjieRepository(DataContext context)
+    public HanjieRepository(MySqlDataContext context)
     {
         _context = context;
     }
@@ -53,4 +55,53 @@ public class HanjieRepository : IHanjieRepository
         var test = await conn.QuerySingleOrDefaultAsync<bool?>(query, new { boardId });
         return test.HasValue && test.Value;
     }
+
+    public Task<IEnumerable<PostgresBoard>> GetBoard(string boardId)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class HanjiePostgresRepository : IHanjieRepository
+{
+    private IDataContext _context;
+
+    public HanjiePostgresRepository(IDataContext context)
+    {
+        _context = context;
+    }
+
+    public Task<bool> BoardExists(string boardId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task CreateCell(Cell cell)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<IEnumerable<Cell>> GetBoardCells(string boardId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<IEnumerable<PostgresBoard>> GetBoard(string boardId)
+    {
+        using var conn = _context.CreateConnection();
+        var query = """
+            SELECT *
+            FROM board
+            WHERE board_id = @boardId
+        """;
+        var test = await conn.QueryAsync<PostgresBoard>(query, new { boardId });
+        return test;
+    }
+}
+
+public class GenericMultiArrayHandler<T> : SqlMapper.TypeHandler<T[,]>
+{
+    public override T[,] Parse(object value) => (T[,]) value;
+
+    public override void SetValue(IDbDataParameter parameter, T[,] value) => parameter.Value = value;
 }
